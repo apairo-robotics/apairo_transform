@@ -1,0 +1,14 @@
+[project]
+name = "apairo-transform"
+version = "0.1.0"
+description = "Runtime transforms for apairo datasets"
+dependencies = [
+    "numpy",
+    "apairo",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
