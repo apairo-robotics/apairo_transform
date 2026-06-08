@@ -2,6 +2,8 @@ from apairo_transform.pointcloud.filter import (
     RangeFilter,
     RandomSubsample,
     ShufflePoints,
+    HeightFilter,
+    TransformPoints,
     ChannelSelect,
 )
 from apairo_transform.pointcloud.augment import (
@@ -17,6 +19,8 @@ from apairo_transform.pointcloud.voxelize import VoxelDownsample
 __all__ = [
     # filter
     "RangeFilter",
+    "HeightFilter",
+    "TransformPoints",
     "RandomSubsample",
     "ShufflePoints",
     "ChannelSelect",

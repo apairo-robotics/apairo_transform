@@ -1,5 +1,7 @@
 from apairo_transform.pointcloud import (
     RangeFilter,
+    HeightFilter,
+    TransformPoints,
     RandomSubsample,
     ShufflePoints,
     ChannelSelect,
@@ -17,6 +19,8 @@ from apairo_transform.label import RemapLabels, MaskLabels
 __all__ = [
     # pointcloud — filter / downsample
     "RangeFilter",
+    "HeightFilter",
+    "TransformPoints",
     "RandomSubsample",
     "ShufflePoints",
     "ChannelSelect",

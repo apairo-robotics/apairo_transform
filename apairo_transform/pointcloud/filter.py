@@ -121,6 +121,61 @@ class ShufflePoints:
         return "ShufflePoints()"
 
 
+class HeightFilter:
+    """Keep only points whose Z coordinate is within [min, max].
+
+    Useful as a coarse ground-removal or sky-clipping step before registration
+    or visualisation.
+
+    Args:
+        min: Minimum Z value (metres).  ``None`` disables the lower bound.
+        max: Maximum Z value (metres).  ``None`` disables the upper bound.
+    """
+
+    def __init__(self, min: Optional[float] = None, max: Optional[float] = None) -> None:
+        self._min = min
+        self._max = max
+
+    def __call__(self, pc: np.ndarray) -> np.ndarray:
+        pc = np.asarray(pc)
+        mask = np.ones(len(pc), dtype=bool)
+        if self._min is not None:
+            mask &= pc[:, 2] >= self._min
+        if self._max is not None:
+            mask &= pc[:, 2] < self._max
+        return pc[mask]
+
+    def __repr__(self) -> str:
+        return f"HeightFilter(min={self._min}, max={self._max})"
+
+
+class TransformPoints:
+    """Apply a fixed 4×4 rigid-body transform to the XYZ columns of a point cloud.
+
+    Useful for static calibration transforms (e.g. lidar-to-camera extrinsic).
+    For per-frame dynamic poses use a ``sample_transform`` that reads the pose
+    key from the sample directly.
+
+    Args:
+        T: A ``(4, 4)`` homogeneous transformation matrix (float64).
+    """
+
+    def __init__(self, T: np.ndarray) -> None:
+        T = np.asarray(T, dtype=np.float64)
+        if T.shape != (4, 4):
+            raise ValueError(f"T must be (4, 4), got {T.shape}")
+        self._R = T[:3, :3]
+        self._t = T[:3, 3]
+
+    def __call__(self, pc: np.ndarray) -> np.ndarray:
+        pc = np.asarray(pc, dtype=np.float64).copy()
+        pc[:, :3] = pc[:, :3] @ self._R.T + self._t
+        return pc
+
+    def __repr__(self) -> str:
+        return "TransformPoints()"
+
+
 class ChannelSelect:
     """Select a subset of columns from a point cloud array.
 
