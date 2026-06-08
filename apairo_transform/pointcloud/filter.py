@@ -14,14 +14,28 @@ import numpy as np
 
 
 class RangeFilter:
-    """Keep only points whose Euclidean distance from the origin is within [min, max].
+    """Keep only points whose distance from the origin is within [min, max].
+
+    The distance metric is controlled by ``norm``, which accepts the same
+    values as the ``ord`` argument of :func:`numpy.linalg.norm`:
+
+    * ``2``       – L2 / Euclidean (default)
+    * ``1``       – L1 / Manhattan
+    * ``np.inf``  – L∞ / Chebyshev: ``max(|x|, |y|, |z|)``
+    * any float p – Lp norm
 
     Args:
-        min: Minimum range (metres).  ``None`` disables the lower bound.
-        max: Maximum range (metres).  ``None`` disables the upper bound.
+        min:  Minimum range (metres).  ``None`` disables the lower bound.
+        max:  Maximum range (metres).  ``None`` disables the upper bound.
+        norm: Norm order passed to ``numpy.linalg.norm``.  Defaults to ``2``.
     """
 
-    def __init__(self, min: Optional[float] = None, max: Optional[float] = 50.0) -> None:
+    def __init__(
+        self,
+        min: Optional[float] = None,
+        max: Optional[float] = 50.0,
+        norm: float = 2,
+    ) -> None:
         if min is not None and min < 0:
             raise ValueError(f"min must be >= 0, got {min}")
         if max is not None and max <= 0:
@@ -30,19 +44,32 @@ class RangeFilter:
             raise ValueError(f"min ({min}) must be < max ({max})")
         self._min = min
         self._max = max
+        self._norm = norm
 
-    def __call__(self, pc: np.ndarray) -> np.ndarray:
+    def compute_mask(self, pc: np.ndarray) -> np.ndarray:
+        """Return the boolean keep-mask without applying it.
+
+        Useful when multiple aligned arrays (e.g. point cloud + labels) must
+        be filtered with the same mask::
+
+            mask   = RangeFilter(max=50.0).compute_mask(pc)
+            pc     = pc[mask]
+            labels = labels[mask]
+        """
         pc = np.asarray(pc)
-        ranges = np.linalg.norm(pc[:, :3], axis=1)
+        ranges = np.linalg.norm(pc[:, :3], ord=self._norm, axis=1)
         mask = np.ones(len(pc), dtype=bool)
         if self._min is not None:
             mask &= ranges >= self._min
         if self._max is not None:
             mask &= ranges < self._max
-        return pc[mask]
+        return mask
+
+    def __call__(self, pc: np.ndarray) -> np.ndarray:
+        return np.asarray(pc)[self.compute_mask(pc)]
 
     def __repr__(self) -> str:
-        return f"RangeFilter(min={self._min}, max={self._max})"
+        return f"RangeFilter(min={self._min}, max={self._max}, norm={self._norm})"
 
 
 class RandomSubsample:
