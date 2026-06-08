@@ -8,33 +8,41 @@ Typical usage::
 
 from __future__ import annotations
 
-from typing import Optional
+import functools
+from typing import Callable, Optional
 
 import numpy as np
+
+# Default norm: L2 / Euclidean distance on the XYZ columns.
+_l2_norm: Callable[[np.ndarray], np.ndarray] = functools.partial(
+    np.linalg.norm, axis=1
+)
 
 
 class RangeFilter:
     """Keep only points whose distance from the origin is within [min, max].
 
-    The distance metric is controlled by ``norm``, which accepts the same
-    values as the ``ord`` argument of :func:`numpy.linalg.norm`:
+    The distance metric is controlled by ``norm``, a callable
+    ``(ndarray of shape (N, 3)) -> (N,)`` that returns one distance per point.
+    Defaults to the L2 / Euclidean norm.
 
-    * ``2``       – L2 / Euclidean (default)
-    * ``1``       – L1 / Manhattan
-    * ``np.inf``  – L∞ / Chebyshev: ``max(|x|, |y|, |z|)``
-    * any float p – Lp norm
+    Common examples::
+
+        RangeFilter(max=50.0)                                          # L2
+        RangeFilter(max=50.0, norm=lambda pc: np.max(np.abs(pc), axis=1))   # L∞
+        RangeFilter(max=50.0, norm=lambda pc: np.sum(np.abs(pc), axis=1))   # L1
 
     Args:
         min:  Minimum range (metres).  ``None`` disables the lower bound.
         max:  Maximum range (metres).  ``None`` disables the upper bound.
-        norm: Norm order passed to ``numpy.linalg.norm``.  Defaults to ``2``.
+        norm: Callable ``(N, 3) -> (N,)`` computing per-point distances.
     """
 
     def __init__(
         self,
         min: Optional[float] = None,
         max: Optional[float] = 50.0,
-        norm: float = 2,
+        norm: Callable[[np.ndarray], np.ndarray] = _l2_norm,
     ) -> None:
         if min is not None and min < 0:
             raise ValueError(f"min must be >= 0, got {min}")
@@ -57,7 +65,7 @@ class RangeFilter:
             labels = labels[mask]
         """
         pc = np.asarray(pc)
-        ranges = np.linalg.norm(pc[:, :3], ord=self._norm, axis=1)
+        ranges = self._norm(pc[:, :3])
         mask = np.ones(len(pc), dtype=bool)
         if self._min is not None:
             mask &= ranges >= self._min
@@ -69,7 +77,7 @@ class RangeFilter:
         return np.asarray(pc)[self.compute_mask(pc)]
 
     def __repr__(self) -> str:
-        return f"RangeFilter(min={self._min}, max={self._max}, norm={self._norm})"
+        return f"RangeFilter(min={self._min}, max={self._max}, norm={self._norm!r})"
 
 
 class RandomSubsample:
@@ -136,14 +144,17 @@ class HeightFilter:
         self._min = min
         self._max = max
 
-    def __call__(self, pc: np.ndarray) -> np.ndarray:
+    def compute_mask(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc)
         mask = np.ones(len(pc), dtype=bool)
         if self._min is not None:
             mask &= pc[:, 2] >= self._min
         if self._max is not None:
             mask &= pc[:, 2] < self._max
-        return pc[mask]
+        return mask
+
+    def __call__(self, pc: np.ndarray) -> np.ndarray:
+        return np.asarray(pc)[self.compute_mask(pc)]
 
     def __repr__(self) -> str:
         return f"HeightFilter(min={self._min}, max={self._max})"
