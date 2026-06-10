@@ -1,14 +1,15 @@
-"""In-memory voxel-grid downsampling — applied at access time to (N, D) arrays.
+"""In-memory voxel-grid transforms — applied at access time to (N, D) arrays.
 
 Unlike :mod:`apairo_preprocess`'s ``VoxelisePointCloud`` (which writes to disk),
-this transform runs entirely in memory and is designed for use with
+these transforms run entirely in memory and are designed for use with
 ``dataset.transform()``.
 
 Typical usage::
 
-    from apairo_transform.pointcloud import VoxelDownsample
+    from apairo_transform.pointcloud import VoxelDownsample, VoxelToCoords
 
-    ds.transform("lidar", VoxelDownsample(voxel_size=0.1, max_range=50.0))
+    ds.transform("lidar",    VoxelDownsample(voxel_size=0.1, max_range=50.0))
+    ds.transform("voxelised", VoxelToCoords(voxel_size=0.1), output="coords")
 """
 
 from __future__ import annotations
@@ -102,3 +103,38 @@ class VoxelDownsample:
             f"VoxelDownsample(voxel_size={self._voxel_size}, "
             f"max_range={self._max_range}, reduction={self._reduction!r})"
         )
+
+
+class VoxelToCoords:
+    """Quantize voxel centroid positions to integer grid indices.
+
+    Takes a ``(N, 3+)`` float array of voxel centroid positions in metres and
+    returns an ``(N, 3)`` int32 array of grid indices, suitable as the
+    ``coords`` input for sparse tensor libraries such as torchsparse.
+
+    The quantization is::
+
+        coords = floor(xyz / voxel_size).astype(int32)
+
+    ``voxel_size`` must match the value used during preprocessing so that
+    indices are consistent with the stored centroids.
+
+    Args:
+        voxel_size: Grid cell edge length in metres.
+
+    Example::
+
+        ds.transform("voxelised", VoxelToCoords(voxel_size=0.1), output="coords")
+    """
+
+    def __init__(self, voxel_size: float) -> None:
+        if voxel_size <= 0:
+            raise ValueError(f"voxel_size must be positive, got {voxel_size}")
+        self._voxel_size = float(voxel_size)
+
+    def __call__(self, pc: np.ndarray) -> np.ndarray:
+        pc = np.asarray(pc)
+        return np.floor(pc[:, :3] / self._voxel_size).astype(np.int32)
+
+    def __repr__(self) -> str:
+        return f"VoxelToCoords(voxel_size={self._voxel_size})"

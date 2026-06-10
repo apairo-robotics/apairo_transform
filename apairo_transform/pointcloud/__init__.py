@@ -14,7 +14,7 @@ from apairo_transform.pointcloud.augment import (
     GaussianNoise,
     RandomPointDrop,
 )
-from apairo_transform.pointcloud.voxelize import VoxelDownsample
+from apairo_transform.pointcloud.voxelize import VoxelDownsample, VoxelToCoords
 
 __all__ = [
     # filter
@@ -33,4 +33,5 @@ __all__ = [
     "RandomPointDrop",
     # voxelize
     "VoxelDownsample",
+    "VoxelToCoords",
 ]

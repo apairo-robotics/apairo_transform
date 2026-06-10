@@ -23,8 +23,10 @@ class PoseTo4x4:
     Accepted input shapes:
 
     * ``(4, 4)`` or ``(N, 4, 4)`` — passed through unchanged.
-    * ``(7,)`` or ``(N, 7)``     — ``[tx, ty, tz, qx, qy, qz, qw]``.
-    * ``(6,)`` or ``(N, 6)``     — ``[tx, ty, tz, rx, ry, rz]`` (Euler ZYX, rad).
+    * ``(3, 4)`` or ``(N, 3, 4)`` — compact homogeneous matrix, bottom row
+      ``[0, 0, 0, 1]`` appended automatically.
+    * ``(7,)`` or ``(N, 7)``      — ``[tx, ty, tz, qx, qy, qz, qw]``.
+    * ``(6,)`` or ``(N, 6)``      — ``[tx, ty, tz, rx, ry, rz]`` (Euler ZYX, rad).
     """
 
     def __call__(self, poses: np.ndarray) -> np.ndarray:
@@ -34,6 +36,14 @@ class PoseTo4x4:
             return poses
         if poses.ndim == 3 and poses.shape[1:] == (4, 4):
             return poses
+
+        if poses.ndim == 2 and poses.shape == (3, 4):
+            return np.vstack([poses, [[0.0, 0.0, 0.0, 1.0]]])
+        if poses.ndim == 3 and poses.shape[1:] == (3, 4):
+            n = poses.shape[0]
+            bottom = np.zeros((n, 1, 4), dtype=np.float64)
+            bottom[:, 0, 3] = 1.0
+            return np.concatenate([poses, bottom], axis=1)
 
         single = poses.ndim == 1
         if single:
@@ -46,7 +56,7 @@ class PoseTo4x4:
         else:
             raise ValueError(
                 f"Cannot convert pose array with shape {poses.shape} to 4x4. "
-                "Expected last dim 6 or 7."
+                "Expected last dim 6 or 7, or shape (3, 4) / (N, 3, 4)."
             )
 
         return result[0] if single else result
