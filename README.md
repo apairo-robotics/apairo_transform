@@ -53,6 +53,29 @@ Requires Python ≥ 3.11 and numpy. No other hard dependencies.
 | `RemapLabels(mapping)` | Remap integer class IDs via a `{old: new}` dictionary |
 | `MaskLabels(keep, ignore_value)` | Set any label not in `keep` to `ignore_value` (default 255) |
 
+### Interpolation — for `ds.synchronize()`
+
+Value-level strategies implementing the `apairo.Interpolator` contract:
+instead of matching an existing event, the value is *synthesized* at the
+reference instant from its two bracketing events. Continuous signals only.
+
+| Class | Description |
+|---|---|
+| `LinearInterp()` | Linear blend between the bracketing values (commands, IMU, scalars) |
+| `Se3Interp()` | SE(3) pose interpolation — lerp translation + shortest-path slerp rotation; accepts `(7,)` [tx ty tz qx qy qz qw] or `(4,4)` |
+
+```python
+from apairo_transform.interp import LinearInterp, Se3Interp
+
+ds_sync = ds.synchronize(
+    reference="velodyne_0",
+    method={
+        "gicp_poses": Se3Interp(),     # pose interpolated at each lidar instant
+        "cmd":        LinearInterp(),
+    },                                  # unlisted channels -> "latest"
+)
+```
+
 ---
 
 ## Quickstart
