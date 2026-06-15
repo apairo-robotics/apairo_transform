@@ -114,31 +114,21 @@ class TestSe3InterpErrors:
 class TestSynchronizeIntegration:
     def _pose_dataset(self):
         """Async in-memory dataset: 'scan' at 2 Hz, 'pose' (7D) at 1 Hz."""
-        from apairo.core import AbstractDataset, Sample
+        from apairo import StreamDataset
 
-        pose_ts = np.array([0.0, 1.0])
-        poses = [
-            np.concatenate([[0.0, 0.0, 0.0], quat_z(0.0)]),
-            np.concatenate([[2.0, 0.0, 0.0], quat_z(np.pi / 2)]),
-        ]
-        scan_ts = np.array([0.0, 0.5, 1.0])
-
-        class DS(AbstractDataset):
-            def __init__(self):
-                self.keys = ["scan", "pose"]
-                self.timestamps = {"scan": scan_ts, "pose": pose_ts}
-                self.loaders = {
-                    "scan": [np.full((4, 3), i, dtype=np.float32) for i in range(3)],
-                    "pose": poses,
-                }
-
-            def __len__(self):
-                return 5
-
-            def _load(self, idx):
-                return Sample(data={}, timestamp=0.0)
-
-        return DS()
+        return StreamDataset({
+            "scan": (
+                np.array([0.0, 0.5, 1.0]),
+                [np.full((4, 3), i, dtype=np.float32) for i in range(3)],
+            ),
+            "pose": (
+                np.array([0.0, 1.0]),
+                [
+                    np.concatenate([[0.0, 0.0, 0.0], quat_z(0.0)]),
+                    np.concatenate([[2.0, 0.0, 0.0], quat_z(np.pi / 2)]),
+                ],
+            ),
+        })
 
     def test_pose_interpolated_at_scan_times(self):
         ds = self._pose_dataset()
