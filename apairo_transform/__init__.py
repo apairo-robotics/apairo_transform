@@ -15,7 +15,7 @@ from apairo_transform.pointcloud import (
     GaussianNoise,
     RandomPointDrop,
 )
-from apairo_transform.pose import PoseTo4x4, InvertPose
+from apairo_transform.pose import PoseTo4x4, InvertPose, lookup_transform
 from apairo_transform.label import RemapLabels, MaskLabels
 from apairo_transform.interp import LinearInterp, Se3Interp
 
@@ -41,6 +41,7 @@ __all__ = [
     # pose
     "PoseTo4x4",
     "InvertPose",
+    "lookup_transform",
     # interpolation (for ds.synchronize)
     "LinearInterp",
     "Se3Interp",

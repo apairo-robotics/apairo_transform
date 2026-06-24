@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from apairo_transform.pose import PoseTo4x4, InvertPose
+from apairo_transform.pose import PoseTo4x4, InvertPose, lookup_transform
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -141,3 +141,20 @@ class TestInvertPose:
         T = PoseTo4x4()(pose)
         T_inv = InvertPose()(T)
         np.testing.assert_allclose(T @ T_inv, identity_4x4(), atol=1e-10)
+
+
+# ── lookup_transform (deprecated; resolution now lives in apairo's Calibration) ─
+
+class TestLookupTransform:
+    def test_delegates_to_calibration_get_tf(self):
+        from apairo.core.config import Calibration
+
+        cal = {"a_to_b": random_rigid(1), "b_to_c": random_rigid(2)}
+        with pytest.warns(DeprecationWarning):
+            out = lookup_transform(cal, target="a", source="c")
+        # same result as the canonical get_tf -- note the flipped argument order.
+        np.testing.assert_allclose(out, Calibration(cal).get_tf("c", "a"), atol=1e-12)
+
+    def test_emits_deprecation_warning(self):
+        with pytest.warns(DeprecationWarning, match="get_tf"):
+            lookup_transform({"a_to_b": random_rigid(0)}, target="a", source="a")
