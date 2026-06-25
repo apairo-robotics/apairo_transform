@@ -29,7 +29,7 @@ class RangeFilter:
     Common examples::
 
         RangeFilter(max=50.0)                                          # L2
-        RangeFilter(max=50.0, norm=lambda pc: np.max(np.abs(pc), axis=1))   # L∞
+        RangeFilter(max=50.0, norm=lambda pc: np.max(np.abs(pc), axis=1))   # L-inf
         RangeFilter(max=50.0, norm=lambda pc: np.sum(np.abs(pc), axis=1))   # L1
 
     Args:

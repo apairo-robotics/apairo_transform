@@ -15,6 +15,7 @@ from apairo_transform.pointcloud.augment import (
     RandomPointDrop,
 )
 from apairo_transform.pointcloud.voxelize import VoxelDownsample, VoxelToCoords
+from apairo_transform.pointcloud.accumulate import AccumulateFrames
 
 __all__ = [
     # filter
@@ -34,4 +35,6 @@ __all__ = [
     # voxelize
     "VoxelDownsample",
     "VoxelToCoords",
+    # accumulate
+    "AccumulateFrames",
 ]

@@ -8,6 +8,7 @@ from apairo_transform.pointcloud import (
     ChannelSelect,
     VoxelDownsample,
     VoxelToCoords,
+    AccumulateFrames,
     RandomRotation,
     RandomFlip,
     RandomScale,
@@ -31,6 +32,7 @@ __all__ = [
     "ChannelSelect",
     "VoxelDownsample",
     "VoxelToCoords",
+    "AccumulateFrames",
     # pointcloud — augment
     "RandomRotation",
     "RandomFlip",

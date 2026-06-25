@@ -28,6 +28,24 @@ Requires Python ≥ 3.11 and numpy. No other hard dependencies.
 | `ChannelSelect(channels)` | Select a subset of columns (e.g. `[0,1,2]` for xyz only) |
 | `VoxelDownsample(voxel_size)` | In-memory voxel-grid downsampling — one representative point per voxel |
 
+### Point cloud — temporal accumulation
+
+| Class | Description |
+|---|---|
+| `AccumulateFrames(lidar, pose, num_frames, stride)` | Densify the current scan by stacking the previous `num_frames` frames (every `stride`-th), each placed into the current ego frame via its pose |
+
+Unlike the other point-cloud transforms, this one reads **two** channels (the
+scan *and* the pose), so it is registered as a *sample-level* transform and
+keeps the frames it has seen in an internal rolling buffer. It is therefore
+**stateful and order-dependent** — accumulate on a sequential pass *before* any
+shuffle/cache, and call `.reset()` between epochs.
+
+```python
+from apairo_transform import AccumulateFrames
+
+ds.transform(AccumulateFrames(lidar="lidar", pose="pose", num_frames=5, stride=1))
+```
+
 ### Point cloud — augmentation
 
 | Class | Description |
