@@ -25,7 +25,12 @@ from typing import Optional
 
 import numpy as np
 
-from apairo_transform.pose.matrix import PoseTo4x4
+from apairo_transform.pose.matrix import (
+    PoseTo4x4,
+    apply_rigid as _apply_rigid,
+    as_single_4x4 as _as_single_4x4,
+    invert_rigid as _invert_rigid,
+)
 
 _to_4x4 = PoseTo4x4()
 
@@ -131,31 +136,3 @@ class AccumulateFrames:
             f"num_frames={self._num_frames}, stride={self._stride}, "
             f"output={self._output!r}, time_channel={self._time_channel})"
         )
-
-
-# ── helpers ──────────────────────────────────────────────────────────────────
-
-def _as_single_4x4(pose: np.ndarray, key: str) -> np.ndarray:
-    if pose.shape != (4, 4):
-        raise ValueError(
-            f"AccumulateFrames expects one 4x4 pose per sample in channel "
-            f"{key!r}, got array of shape {pose.shape}."
-        )
-    return pose
-
-
-def _invert_rigid(T: np.ndarray) -> np.ndarray:
-    """Closed-form inverse of a rigid transform — exact, no drift."""
-    R = T[:3, :3]
-    t = T[:3, 3]
-    out = np.eye(4, dtype=np.float64)
-    out[:3, :3] = R.T
-    out[:3, 3] = -(R.T @ t)
-    return out
-
-
-def _apply_rigid(scan: np.ndarray, T: np.ndarray) -> np.ndarray:
-    """Apply 4x4 ``T`` to the XYZ columns, preserving extra columns and dtype."""
-    out = scan.astype(np.float64, copy=True)
-    out[:, :3] = out[:, :3] @ T[:3, :3].T + T[:3, 3]
-    return out.astype(scan.dtype, copy=False)

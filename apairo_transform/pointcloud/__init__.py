@@ -16,6 +16,7 @@ from apairo_transform.pointcloud.augment import (
 )
 from apairo_transform.pointcloud.voxelize import VoxelDownsample, VoxelToCoords
 from apairo_transform.pointcloud.accumulate import AccumulateFrames
+from apairo_transform.pointcloud.stack import StackByPose
 
 __all__ = [
     # filter
@@ -37,4 +38,5 @@ __all__ = [
     "VoxelToCoords",
     # accumulate
     "AccumulateFrames",
+    "StackByPose",
 ]

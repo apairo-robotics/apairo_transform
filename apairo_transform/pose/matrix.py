@@ -94,6 +94,36 @@ class InvertPose:
         return "InvertPose()"
 
 
+# ── rigid helpers (shared by accumulate / stack) ─────────────────────────────
+
+def invert_rigid(T: np.ndarray) -> np.ndarray:
+    """Closed-form inverse of a 4x4 rigid transform -- exact, no drift (float64)."""
+    T = np.asarray(T, dtype=np.float64)
+    R, t = T[:3, :3], T[:3, 3]
+    out = np.eye(4)
+    out[:3, :3] = R.T
+    out[:3, 3] = -(R.T @ t)
+    return out
+
+
+def apply_rigid(scan: np.ndarray, T: np.ndarray) -> np.ndarray:
+    """Apply 4x4 ``T`` to the XYZ columns (first three), preserving extra cols/dtype."""
+    out = scan.astype(np.float64, copy=True)
+    out[:, :3] = out[:, :3] @ T[:3, :3].T + T[:3, 3]
+    return out.astype(scan.dtype, copy=False)
+
+
+def as_single_4x4(pose: np.ndarray, key: str) -> np.ndarray:
+    """Validate that *pose* is a single ``(4, 4)`` matrix, else raise."""
+    pose = np.asarray(pose)
+    if pose.shape != (4, 4):
+        raise ValueError(
+            f"expected one 4x4 pose per sample in channel {key!r}, "
+            f"got array of shape {pose.shape}."
+        )
+    return pose
+
+
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def _invert_single(T: np.ndarray) -> np.ndarray:

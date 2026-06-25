@@ -15,6 +15,7 @@ from apairo_transform.pointcloud import (
     RandomTranslation,
     GaussianNoise,
     RandomPointDrop,
+    StackByPose,
 )
 from apairo_transform.pose import PoseTo4x4, InvertPose, lookup_transform
 from apairo_transform.label import RemapLabels, MaskLabels
@@ -33,6 +34,7 @@ __all__ = [
     "VoxelDownsample",
     "VoxelToCoords",
     "AccumulateFrames",
+    "StackByPose",
     # pointcloud — augment
     "RandomRotation",
     "RandomFlip",
