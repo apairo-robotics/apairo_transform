@@ -7,6 +7,12 @@ dependencies = [
     "apairo",
 ]
 
+[project.optional-dependencies]
+# Resize (apairo_transform.image) needs OpenCV; the other image transforms are
+# pure numpy. Kept optional so the core install stays numpy-only.
+image = ["opencv-python"]
+dev = ["pytest", "opencv-python"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 

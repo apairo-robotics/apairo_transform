@@ -3,6 +3,7 @@ from apairo_transform.pointcloud.filter import (
     RandomSubsample,
     ShufflePoints,
     HeightFilter,
+    BoxFilter,
     TransformPoints,
     ChannelSelect,
 )
@@ -17,11 +18,13 @@ from apairo_transform.pointcloud.augment import (
 from apairo_transform.pointcloud.voxelize import VoxelDownsample, VoxelToCoords
 from apairo_transform.pointcloud.accumulate import AccumulateFrames
 from apairo_transform.pointcloud.stack import StackByPose
+from apairo_transform.pointcloud.apply_pose import ApplyPose
 
 __all__ = [
     # filter
     "RangeFilter",
     "HeightFilter",
+    "BoxFilter",
     "TransformPoints",
     "RandomSubsample",
     "ShufflePoints",
@@ -39,4 +42,5 @@ __all__ = [
     # accumulate
     "AccumulateFrames",
     "StackByPose",
+    "ApplyPose",
 ]

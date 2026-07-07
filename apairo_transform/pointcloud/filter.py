@@ -160,6 +160,49 @@ class HeightFilter:
         return f"HeightFilter(min={self._min}, max={self._max})"
 
 
+class BoxFilter:
+    """Keep only points inside an axis-aligned XY (and optionally Z) box.
+
+    A region-of-interest crop in the cloud's own frame: useful to restrict a
+    scan to the robot's footprint or a fixed working volume before downstream
+    processing.
+
+    Args:
+        x_min, x_max: X range (metres). ``None`` disables that bound.
+        y_min, y_max: Y range (metres). ``None`` disables that bound.
+        z_min, z_max: Optional Z range (metres).
+    """
+
+    def __init__(
+        self,
+        x_min: Optional[float] = None,
+        x_max: Optional[float] = None,
+        y_min: Optional[float] = None,
+        y_max: Optional[float] = None,
+        z_min: Optional[float] = None,
+        z_max: Optional[float] = None,
+    ) -> None:
+        self._x = (x_min, x_max)
+        self._y = (y_min, y_max)
+        self._z = (z_min, z_max)
+
+    def compute_mask(self, pc: np.ndarray) -> np.ndarray:
+        pc = np.asarray(pc)
+        mask = np.ones(len(pc), dtype=bool)
+        for axis, (lo, hi) in enumerate((self._x, self._y, self._z)):
+            if lo is not None:
+                mask &= pc[:, axis] >= lo
+            if hi is not None:
+                mask &= pc[:, axis] <= hi
+        return mask
+
+    def __call__(self, pc: np.ndarray) -> np.ndarray:
+        return np.asarray(pc)[self.compute_mask(pc)]
+
+    def __repr__(self) -> str:
+        return f"BoxFilter(x={self._x}, y={self._y}, z={self._z})"
+
+
 class TransformPoints:
     """Apply a fixed 4×4 rigid-body transform to the XYZ columns of a point cloud.
 
