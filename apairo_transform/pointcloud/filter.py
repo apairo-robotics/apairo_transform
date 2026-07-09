@@ -231,10 +231,15 @@ class TransformPoints:
 
 
 class ChannelSelect:
-    """Select a subset of columns from a point cloud array.
+    """Select a subset of components along the last axis.
+
+    Works on a 2-D point cloud ``(N, C)`` -- keeping columns, the common case --
+    and on a 1-D per-frame vector ``(C,)`` such as a pose/state row, where it
+    keeps the chosen components.
 
     Args:
-        channels: Column indices to keep (e.g. ``[0, 1, 2]`` for xyz only).
+        channels: Indices to keep along the last axis (e.g. ``[0, 1, 2]`` for
+            xyz of a cloud, or ``range(7)`` for the pose of an Odometry row).
     """
 
     def __init__(self, channels: list[int]) -> None:
@@ -244,7 +249,7 @@ class ChannelSelect:
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc)
-        return pc[:, self._channels]
+        return pc[..., self._channels]
 
     def __repr__(self) -> str:
         return f"ChannelSelect(channels={self._channels})"

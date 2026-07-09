@@ -149,6 +149,13 @@ class TestChannelSelect:
         out = ChannelSelect([2])(pc)
         assert out.shape == (30, 1)
 
+    def test_1d_vector(self):
+        # A 1-D per-frame vector (e.g. a 13-wide Odometry row) -> keep the pose.
+        row = np.arange(13.0)
+        out = ChannelSelect(range(7))(row)
+        assert out.shape == (7,)
+        np.testing.assert_array_equal(out, row[:7])
+
     def test_empty_channels_raises(self):
         with pytest.raises(ValueError):
             ChannelSelect([])
