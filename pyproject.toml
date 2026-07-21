@@ -8,10 +8,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Resize (apairo_transform.image) needs OpenCV; the other image transforms are
-# pure numpy. Kept optional so the core install stays numpy-only.
+# Resize (apairo_transform.image) needs OpenCV, and to_torch needs PyTorch; the
+# rest is pure numpy. Kept optional so the core install stays numpy-only.
 image = ["opencv-python"]
-dev = ["pytest", "opencv-python"]
+torch = ["torch"]
+dev = ["pytest", "opencv-python", "torch"]
 
 [tool.setuptools.packages.find]
 where = ["."]

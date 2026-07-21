@@ -23,6 +23,7 @@ from apairo_transform.pointcloud import (
 from apairo_transform.pose import PoseTo4x4, InvertPose, lookup_transform
 from apairo_transform.label import RemapLabels, MaskLabels
 from apairo_transform.interp import LinearInterp, Se3Interp
+from apairo_transform.to_torch import to_torch_collate, to_tensors
 
 __all__ = [
     # array
@@ -63,4 +64,7 @@ __all__ = [
     # label
     "RemapLabels",
     "MaskLabels",
+    # torch (terminal — DataLoader collate)
+    "to_torch_collate",
+    "to_tensors",
 ]
