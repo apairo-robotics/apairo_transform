@@ -108,25 +108,34 @@ from apairo_transform import RangeFilter, RandomSubsample, ChannelSelect
 
 ds = Rellis3DDataset("/data/RELLIS/00000", keys=["lidar"])
 
-ds.transform("lidar", RangeFilter(max=50.0))
-ds.transform("lidar", RandomSubsample(8192))
-ds.transform("lidar", ChannelSelect([0, 1, 2]))   # xyz only
+ds = ds.transform("lidar", RangeFilter(max=50.0))
+ds = ds.transform("lidar", RandomSubsample(8192))
+ds = ds.transform("lidar", ChannelSelect([0, 1, 2]))   # xyz only
 
 sample = ds[0]
 # sample.data["lidar"] -> np.ndarray (N, 3), N ≤ 8192, range < 50 m
 ```
 
-Multiple calls on the same key compose in order. Alternatively, use [`Compose`](https://github.com/apairo-robotics/apairo) from apairo core:
+Multiple calls on the same key compose in order, and each returns the
+dataset to use next: assign it (`ds = ds.transform(...)`).
+
+Chain `transform()` calls to build a dataset. Use
+[`Compose`](https://github.com/apairo-robotics/apairo) from apairo core to
+name an operation made of several transforms, so it can be reused as one
+step, in a dataset or on a bare array:
 
 ```python
 from apairo.core import Compose
 from apairo_transform import RangeFilter, RandomSubsample, ChannelSelect
 
-ds.transform("lidar", Compose([
+clean_lidar = Compose([
     RangeFilter(max=50.0),
     RandomSubsample(8192),
     ChannelSelect([0, 1, 2]),
-]))
+])
+
+ds = ds.transform("lidar", clean_lidar)
+points = clean_lidar(raw_points)        # the same operation, outside a dataset
 ```
 
 ### Augmentation pipeline for training
@@ -141,7 +150,7 @@ from apairo_transform import (
 
 ds = Rellis3DDataset("/data/RELLIS/00000", keys=["lidar"])
 
-ds.transform("lidar", Compose([
+ds = ds.transform("lidar", Compose([
     RangeFilter(max=50.0),
     RandomRotation(axis="z"),           # yaw-only for outdoor LiDAR
     RandomFlip(axis="x", p=0.5),
@@ -165,8 +174,8 @@ COARSE = {1: 0, 3: 0, 10: 0, 23: 0,   # ground
           8: 2, 12: 2, 15: 2, 18: 2,   # obstacle
           9: 3}                          # sky
 
-ds.transform("labels", RemapLabels(COARSE, default=255))
-ds.transform("labels", MaskLabels(keep={0, 1, 2, 3}, ignore_value=255))
+ds = ds.transform("labels", RemapLabels(COARSE, default=255))
+ds = ds.transform("labels", MaskLabels(keep={0, 1, 2, 3}, ignore_value=255))
 ```
 
 ### Pose conversion
@@ -178,8 +187,8 @@ from apairo_transform import PoseTo4x4, InvertPose
 ds = Rellis3DDataset("/data/RELLIS/00000", keys=["poses"])
 
 # poses channel: (3, 4) → pad to (4, 4) and invert
-ds.transform("poses", PoseTo4x4())
-ds.transform("poses", InvertPose())
+ds = ds.transform("poses", PoseTo4x4())
+ds = ds.transform("poses", InvertPose())
 ```
 
 ### Voxel downsampling at access time
@@ -189,7 +198,7 @@ Unlike `VoxelisePointCloud` in apairo-preprocess (which saves to disk once), `Vo
 ```python
 from apairo_transform import VoxelDownsample
 
-ds.transform("lidar", VoxelDownsample(voxel_size=0.1, max_range=50.0))
+ds = ds.transform("lidar", VoxelDownsample(voxel_size=0.1, max_range=50.0))
 ```
 
 ---

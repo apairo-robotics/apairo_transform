@@ -85,7 +85,7 @@ def main() -> None:
 
     lidar_tf, labels_tf = build_pipeline(args.dataset, args.max_range, args.n_points)
 
-    (
+    ds = (
         ds
         .transform(args.lidar_key, lidar_tf)
         .transform(args.labels_key, labels_tf)

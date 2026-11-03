@@ -2,8 +2,8 @@
 
 Typical usage::
 
-    ds.transform("lidar", RangeFilter(max=50.0))
-    ds.transform("lidar", Compose([RangeFilter(max=50.0), RandomSubsample(4096)]))
+    ds = ds.transform("lidar", RangeFilter(max=50.0))
+    ds = ds.transform("lidar", Compose([RangeFilter(max=50.0), RandomSubsample(4096)]))
 """
 
 from __future__ import annotations

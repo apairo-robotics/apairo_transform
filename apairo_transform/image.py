@@ -6,7 +6,7 @@ Operate on the ``(H, W, 3)`` uint8 images an apairo dataset yields (e.g. from a
 
 Typical usage::
 
-    ds.transform("image", Compose([Resize(224, 224), ToFloat(), Normalize(), ToCHW()]))
+    ds = ds.transform("image", Compose([Resize(224, 224), ToFloat(), Normalize(), ToCHW()]))
 
 ``Resize`` needs OpenCV (install the ``image`` extra:
 ``pip install apairo-transform[image]``); the other transforms are pure numpy.

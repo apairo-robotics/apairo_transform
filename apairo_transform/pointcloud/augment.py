@@ -14,7 +14,7 @@ Typical usage::
         RandomScale(range=(0.95, 1.05)),
         GaussianNoise(sigma=0.01),
     ])
-    ds.transform("lidar", aug)
+    ds = ds.transform("lidar", aug)
 """
 
 from __future__ import annotations

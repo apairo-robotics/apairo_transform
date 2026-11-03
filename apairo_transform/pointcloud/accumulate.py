@@ -3,7 +3,7 @@
 Densifies a sparse single-shot scan by stacking the last few frames into the
 current ego frame, using each frame's pose to place it correctly::
 
-    ds.transform(AccumulateFrames(lidar="lidar", pose="pose", num_frames=5))
+    ds = ds.transform(AccumulateFrames(lidar="lidar", pose="pose", num_frames=5))
 
 Unlike the other point-cloud transforms (pure ``(N, D) -> (N, D)`` callables),
 this one reads **two** channels — the scan and the pose — so it is registered as

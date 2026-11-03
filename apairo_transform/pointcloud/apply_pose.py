@@ -6,8 +6,8 @@ The stateless, mono-frame counterpart of
 ego frame, ``ApplyPose`` takes the **one** scan of a sample and pushes its XYZ
 out to the shared world frame using that sample's pose::
 
-    ds.transform("odom", PoseTo4x4())          # if the pose isn't already 4x4
-    ds.transform(ApplyPose(lidar="lidar", pose="odom"))
+    ds = ds.transform("odom", PoseTo4x4())   # if the pose isn't already 4x4
+    ds = ds.transform(ApplyPose(lidar="lidar", pose="odom"))
 
 Like ``AccumulateFrames`` it reads **two** channels -- the scan and the pose --
 so it is a *sample-level* transform (``ds.transform(fn)``, not
