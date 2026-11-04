@@ -32,19 +32,27 @@ Requires Python ≥ 3.11 and numpy. No other hard dependencies.
 
 | Class | Description |
 |---|---|
-| `AccumulateFrames(lidar, pose, num_frames, stride)` | Densify the current scan by stacking the previous `num_frames` frames (every `stride`-th), each placed into the current ego frame via its pose |
+| `StackByPose(lidar, pose, output, time_channel)` | Reducer for `ds.window()`: densify the anchor scan by stacking every scan of its window, each placed into the anchor's ego frame via its pose |
+| `ApplyPose(lidar, pose)` | Move one scan into the world frame with its own pose |
 
-Unlike the other point-cloud transforms, this one reads **two** channels (the
-scan *and* the pose), so it is registered as a *sample-level* transform and
-keeps the frames it has seen in an internal rolling buffer. It is therefore
-**stateful and order-dependent** — accumulate on a sequential pass *before* any
-shuffle/cache, and call `.reset()` between epochs.
+Accumulation is a window of frames reduced to one sample. The window is
+computed by index, so the result stays correct under shuffling, with several
+`DataLoader` workers, and never mixes two sequences:
 
 ```python
-from apairo_transform import AccumulateFrames
+from apairo_transform import StackByPose
 
-ds.transform(AccumulateFrames(lidar="lidar", pose="pose", num_frames=5, stride=1))
+ds = ds.window(size=5, stride=1, reduce=StackByPose(lidar="lidar", pose="pose"))
 ```
+
+On an asynchronous dataset, synchronize the scan and the pose first
+(`ds.synchronize(reference="lidar", method={"pose": Se3Interp()})`).
+
+> **`AccumulateFrames` is deprecated (0.3).** It kept a rolling buffer, so it
+> only worked on a sequential pass and needed `.reset()` between sequences.
+> Replace `ds.transform(AccumulateFrames(lidar, pose, num_frames=5, stride=1))`
+> with `ds.window(size=5, stride=1, reduce=StackByPose(lidar, pose))`: same
+> cloud, no state. It will be removed in a later release.
 
 ### Point cloud — augmentation
 

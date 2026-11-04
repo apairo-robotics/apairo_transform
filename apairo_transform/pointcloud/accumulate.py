@@ -1,5 +1,20 @@
 """Temporal point-cloud accumulation — a stateful, sample-level transform.
 
+.. deprecated:: 0.3
+    Use :class:`~apairo_transform.pointcloud.stack.StackByPose` on a window
+    view instead. It gives the same cloud, holds no state, works under
+    shuffling and with several ``DataLoader`` workers, and never mixes two
+    sequences, so there is no ``reset()`` to call::
+
+        from apairo_transform import StackByPose
+
+        ds = ds.window(size=5, stride=1, reduce=StackByPose())
+
+    ``num_frames`` becomes the window's ``size`` and ``stride`` moves to the
+    window; ``lidar``, ``pose``, ``output`` and ``time_channel`` keep their
+    meaning on ``StackByPose``. ``AccumulateFrames`` will be removed in a
+    later release.
+
 Densifies a sparse single-shot scan by stacking the last few frames into the
 current ego frame, using each frame's pose to place it correctly::
 
@@ -23,6 +38,8 @@ from __future__ import annotations
 from collections import deque
 from typing import Optional
 
+import warnings
+
 import numpy as np
 
 from apairo_transform.pose.matrix import (
@@ -37,6 +54,10 @@ _to_4x4 = PoseTo4x4()
 
 class AccumulateFrames:
     """Accumulate consecutive lidar scans into the current frame using poses.
+
+    .. deprecated:: 0.3
+        Use ``ds.window(size=num_frames, stride=stride, reduce=StackByPose())``;
+        see the module docstring.
 
     Maintains a rolling buffer of the most recently seen samples. On every
     call it appends the current ``(scan, pose)``, then gathers ``num_frames``
@@ -78,6 +99,15 @@ class AccumulateFrames:
         output: Optional[str] = None,
         time_channel: bool = False,
     ) -> None:
+        warnings.warn(
+            "AccumulateFrames is deprecated and will be removed in a later "
+            "release: use ds.window(size=num_frames, stride=stride, "
+            "reduce=StackByPose(...)). It gives the same cloud without state, "
+            "so it stays correct under shuffling, with several DataLoader "
+            "workers and across sequence boundaries.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if num_frames < 1:
             raise ValueError(f"num_frames must be >= 1, got {num_frames}")
         if stride < 1:

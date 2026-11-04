@@ -1,8 +1,10 @@
-"""Pose-aware window reducer — the stateless counterpart of AccumulateFrames.
+"""Pose-aware window reducer — temporal point-cloud accumulation.
 
-Where :class:`~apairo_transform.pointcloud.accumulate.AccumulateFrames` keeps a
-rolling buffer and only works on a sequential pass, ``StackByPose`` receives a
-whole window already and holds no state, so it works under random access::
+``StackByPose`` densifies a scan with its predecessors. It receives a whole
+window already and holds no state, so it works under random access,
+shuffling and several ``DataLoader`` workers. It replaces the deprecated
+:class:`~apairo_transform.pointcloud.accumulate.AccumulateFrames`, which kept a
+rolling buffer and only worked on a sequential pass::
 
     from apairo_transform import StackByPose
 

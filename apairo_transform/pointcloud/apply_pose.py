@@ -1,18 +1,18 @@
 """Lift a single scan into the world frame using its per-frame pose.
 
-The stateless, mono-frame counterpart of
-:class:`~apairo_transform.pointcloud.accumulate.AccumulateFrames`: where
-``AccumulateFrames`` reprojects a rolling *window* of past scans into the current
-ego frame, ``ApplyPose`` takes the **one** scan of a sample and pushes its XYZ
-out to the shared world frame using that sample's pose::
+The single-frame counterpart of
+:class:`~apairo_transform.pointcloud.stack.StackByPose`: where ``StackByPose``
+reprojects a *window* of scans into the anchor's ego frame, ``ApplyPose`` takes
+the **one** scan of a sample and pushes its XYZ out to the shared world frame
+using that sample's pose::
 
     ds = ds.transform("odom", PoseTo4x4())   # if the pose isn't already 4x4
     ds = ds.transform(ApplyPose(lidar="lidar", pose="odom"))
 
-Like ``AccumulateFrames`` it reads **two** channels -- the scan and the pose --
-so it is a *sample-level* transform (``ds.transform(fn)``, not
-``ds.transform(key, fn)``). It holds no state, so unlike ``AccumulateFrames`` it
-is safe under shuffling and multi-worker ``DataLoader``s.
+It reads **two** channels -- the scan and the pose -- so it is a
+*sample-level* transform (``ds.transform(fn)``, not ``ds.transform(key, fn)``).
+It holds no state, so it is safe under shuffling and multi-worker
+``DataLoader``s.
 """
 
 from __future__ import annotations
