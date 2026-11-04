@@ -90,6 +90,9 @@ class AccumulateFrames:
                       current frame, ``1`` for the previous kept frame, ...).
     """
 
+    # Depends on read order: ds.inference() (apairo) flags it.
+    stateful = True
+
     def __init__(
         self,
         lidar: str = "lidar",

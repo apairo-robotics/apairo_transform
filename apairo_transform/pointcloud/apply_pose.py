@@ -58,6 +58,16 @@ class ApplyPose:
                 overwriting ``lidar``.
     """
 
+    @property
+    def input_keys(self) -> list[str]:
+        """Channels read -- lets ds.inference() (apairo) prune around it."""
+        return [self._lidar, self._pose]
+
+    @property
+    def output_keys(self) -> list[str]:
+        """Channel written."""
+        return [self._output]
+
     def __init__(
         self,
         lidar: str = "lidar",

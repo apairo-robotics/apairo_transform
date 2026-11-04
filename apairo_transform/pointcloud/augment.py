@@ -41,6 +41,9 @@ class RandomRotation:
         seed:      Optional RNG seed.
     """
 
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
+
     def __init__(
         self,
         axis: Literal["x", "y", "z", "so3"] = "z",
@@ -80,6 +83,9 @@ class RandomFlip:
         seed: Optional RNG seed.
     """
 
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
+
     def __init__(
         self,
         axis: Literal["x", "y"] = "x",
@@ -114,6 +120,9 @@ class RandomScale:
         seed:  Optional RNG seed.
     """
 
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
+
     def __init__(
         self,
         range: Tuple[float, float] = (0.95, 1.05),
@@ -146,6 +155,9 @@ class RandomTranslation:
         seed:  Optional RNG seed.
     """
 
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
+
     def __init__(self, sigma: float = 0.2, seed: Optional[int] = None) -> None:
         if sigma <= 0:
             raise ValueError(f"sigma must be > 0, got {sigma}")
@@ -172,6 +184,9 @@ class GaussianNoise:
         seed:  Optional RNG seed.
     """
 
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
+
     def __init__(self, sigma: float = 0.01, seed: Optional[int] = None) -> None:
         if sigma <= 0:
             raise ValueError(f"sigma must be > 0, got {sigma}")
@@ -196,6 +211,9 @@ class RandomPointDrop:
         p:    Per-point drop probability.
         seed: Optional RNG seed.
     """
+
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
 
     def __init__(self, p: float = 0.05, seed: Optional[int] = None) -> None:
         if not 0.0 <= p < 1.0:
