@@ -9,10 +9,12 @@ Unlike [apairo-preprocess](https://github.com/apairo-robotics/apairo_preprocess)
 ## Installation
 
 ```bash
-pip install git+https://github.com/apairo-robotics/apairo_transform.git
+pip install apairo-transform
+pip install "apairo-transform[image]"   # Resize, with OpenCV
+pip install "apairo-transform[torch]"   # to_torch_collate, to_tensors
 ```
 
-Requires Python ≥ 3.11 and numpy. No other hard dependencies.
+Requires Python ≥ 3.11, numpy and apairo ≥ 0.9. No other hard dependencies.
 
 ---
 
