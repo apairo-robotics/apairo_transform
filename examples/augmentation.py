@@ -78,7 +78,7 @@ def main() -> None:
         GaussianNoise(sigma=0.01, seed=args.seed),
         RandomPointDrop(p=args.drop_p, seed=args.seed),
     ])
-    ds_aug.transform(args.lidar_key, aug)
+    ds_aug = ds_aug.transform(args.lidar_key, aug)
 
     print(f"Dataset   : {dataset_cls.__name__}")
     print(f"Sequence  : {args.seq_dir}")

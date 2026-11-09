@@ -5,8 +5,8 @@ Typical usage::
     from apairo_transform import CastTo
     import numpy as np
 
-    ds.transform("voxelised",         CastTo(np.float32))
-    ds.transform("voxelised_trav_gt", CastTo(np.int64))
+    ds = ds.transform("voxelised",         CastTo(np.float32))
+    ds = ds.transform("voxelised_trav_gt", CastTo(np.int64))
 """
 
 from __future__ import annotations
@@ -26,8 +26,8 @@ class CastTo:
 
     Example::
 
-        ds.transform("voxelised",         CastTo(np.float32))
-        ds.transform("voxelised_trav_gt", CastTo(np.int64))
+        ds = ds.transform("voxelised",         CastTo(np.float32))
+        ds = ds.transform("voxelised_trav_gt", CastTo(np.int64))
     """
 
     def __init__(self, dtype: np.dtype) -> None:

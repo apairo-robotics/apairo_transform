@@ -79,11 +79,11 @@ def main() -> None:
         mapping = RELLIS_COARSE if args.dataset == "rellis" else {
             k: 0 for k in range(260)
         }
-        ds.transform(args.labels_key, RemapLabels(mapping))
+        ds = ds.transform(args.labels_key, RemapLabels(mapping))
         desc = f"RemapLabels ({len(mapping)} rules)"
     else:
         keep = {1, 3, 10, 23, 31, 33} if args.dataset == "rellis" else SEMANTIC_KITTI_KEEP
-        ds.transform(args.labels_key, MaskLabels(keep=keep, ignore_value=255))
+        ds = ds.transform(args.labels_key, MaskLabels(keep=keep, ignore_value=255))
         desc = f"MaskLabels(keep={sorted(keep)})"
 
     print(f"Dataset   : {dataset_cls.__name__}")

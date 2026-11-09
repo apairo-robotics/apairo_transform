@@ -8,8 +8,8 @@ Typical usage::
 
     from apairo_transform.pointcloud import VoxelDownsample, VoxelToCoords
 
-    ds.transform("lidar",    VoxelDownsample(voxel_size=0.1, max_range=50.0))
-    ds.transform("voxelised", VoxelToCoords(voxel_size=0.1), output="coords")
+    ds = ds.transform("lidar",    VoxelDownsample(voxel_size=0.1, max_range=50.0))
+    ds = ds.transform("voxelised", VoxelToCoords(voxel_size=0.1), output="coords")
 """
 
 from __future__ import annotations
@@ -124,7 +124,7 @@ class VoxelToCoords:
 
     Example::
 
-        ds.transform("voxelised", VoxelToCoords(voxel_size=0.1), output="coords")
+        ds = ds.transform("voxelised", VoxelToCoords(voxel_size=0.1), output="coords")
     """
 
     def __init__(self, voxel_size: float) -> None:

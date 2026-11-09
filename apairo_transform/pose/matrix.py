@@ -8,8 +8,8 @@ Two common conventions are supported:
 
 Typical usage::
 
-    ds.transform("poses", PoseTo4x4())
-    ds.transform("poses", InvertPose())
+    ds = ds.transform("poses", PoseTo4x4())
+    ds = ds.transform("poses", InvertPose())
 """
 
 from __future__ import annotations

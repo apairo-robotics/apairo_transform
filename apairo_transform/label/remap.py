@@ -3,8 +3,8 @@
 Typical usage::
 
     mapping = {0: 255, 1: 0, 2: 0, 3: 1}   # remap class IDs
-    ds.transform("labels", RemapLabels(mapping))
-    ds.transform("labels", MaskLabels(keep={0, 1}, ignore_value=255))
+    ds = ds.transform("labels", RemapLabels(mapping))
+    ds = ds.transform("labels", MaskLabels(keep={0, 1}, ignore_value=255))
 """
 
 from __future__ import annotations

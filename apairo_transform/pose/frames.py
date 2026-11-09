@@ -9,7 +9,7 @@ dependent op (points vs poses vs normals)::
     from apairo_transform import TransformPoints
 
     T = ds.calibration.get_tf("os_lidar", "base_link")  # T_base_link_from_os_lidar
-    ds.transform("lidar", TransformPoints(T))           # apply it to the "lidar" channel
+    ds = ds.transform("lidar", TransformPoints(T))           # apply it to the "lidar" channel
 
 :func:`lookup_transform` is the standalone form for a raw
 ``{"<parent>_to_<child>": 4x4}`` dict.

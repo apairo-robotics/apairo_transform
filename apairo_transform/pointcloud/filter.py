@@ -2,8 +2,8 @@
 
 Typical usage::
 
-    ds.transform("lidar", RangeFilter(max=50.0))
-    ds.transform("lidar", Compose([RangeFilter(max=50.0), RandomSubsample(4096)]))
+    ds = ds.transform("lidar", RangeFilter(max=50.0))
+    ds = ds.transform("lidar", Compose([RangeFilter(max=50.0), RandomSubsample(4096)]))
 """
 
 from __future__ import annotations
@@ -13,10 +13,12 @@ from typing import Callable, Optional
 
 import numpy as np
 
-# Default norm: L2 / Euclidean distance on the XYZ columns.
-_l2_norm: Callable[[np.ndarray], np.ndarray] = functools.partial(
-    np.linalg.norm, axis=1
-)
+def _l2_norm(pc: np.ndarray) -> np.ndarray:
+    """Default norm: L2 / Euclidean distance on the XYZ columns.
+
+    A module-level function (not a ``functools.partial``) so a saved chain
+    can name it."""
+    return np.linalg.norm(pc, axis=1)
 
 
 class RangeFilter:
@@ -116,6 +118,9 @@ class ShufflePoints:
     Args:
         seed: Optional RNG seed for reproducibility.
     """
+
+    # Training only: removed by ds.inference() (apairo).
+    inference = False
 
     def __init__(self, seed: Optional[int] = None) -> None:
         self._rng = np.random.default_rng(seed)

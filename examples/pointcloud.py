@@ -48,9 +48,9 @@ def main() -> None:
     dataset_cls = DATASETS[args.dataset]
     ds = dataset_cls(args.seq_dir, keys=[args.lidar_key])
 
-    ds.transform(args.lidar_key, RangeFilter(max=args.max_range))
-    ds.transform(args.lidar_key, RandomSubsample(args.n_points))
-    ds.transform(args.lidar_key, ShufflePoints())
+    ds = ds.transform(args.lidar_key, RangeFilter(max=args.max_range))
+    ds = ds.transform(args.lidar_key, RandomSubsample(args.n_points))
+    ds = ds.transform(args.lidar_key, ShufflePoints())
 
     print(f"Dataset  : {dataset_cls.__name__}")
     print(f"Sequence : {args.seq_dir}")
