@@ -143,6 +143,12 @@ def _quat_to_4x4(poses: np.ndarray) -> np.ndarray:
 
     # normalise quaternions
     norm = np.sqrt(qx**2 + qy**2 + qz**2 + qw**2)
+    bad = ~(norm > 0)  # zero, or NaN
+    if np.any(bad):
+        raise ValueError(
+            f"Pose {int(np.flatnonzero(bad)[0])} has a quaternion of norm "
+            f"{float(norm[bad][0])}: not a rotation (an uninitialised pose?)."
+        )
     qx, qy, qz, qw = qx / norm, qy / norm, qz / norm, qw / norm
 
     out = np.zeros((N, 4, 4), dtype=np.float64)

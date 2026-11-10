@@ -18,6 +18,8 @@ from typing import Literal, Optional
 
 import numpy as np
 
+from apairo_transform._random import Rng
+
 _Reduction = Literal["centroid", "first", "random"]
 
 
@@ -46,6 +48,7 @@ class VoxelDownsample:
         voxel_size: float,
         max_range: Optional[float] = None,
         reduction: _Reduction = "centroid",
+        seed: Optional[int] = None,
     ) -> None:
         if voxel_size <= 0:
             raise ValueError(f"voxel_size must be positive, got {voxel_size}")
@@ -58,11 +61,15 @@ class VoxelDownsample:
         self._voxel_size = float(voxel_size)
         self._max_range  = max_range
         self._reduction  = reduction
+        self._rng = Rng(seed)  # used by reduction="random"
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc, dtype=np.float64)
         if pc.ndim != 2 or pc.shape[1] < 3:
             raise ValueError(f"Point cloud must be (N, D>=3), got {pc.shape}")
+        # A return without a position (NaN or inf xyz) belongs to no voxel: it
+        # used to become a voxel of its own, with a NaN centroid.
+        pc = pc[np.all(np.isfinite(pc[:, :3]), axis=1)]
 
         if self._max_range is not None:
             keep = np.linalg.norm(pc[:, :3], axis=1) < self._max_range
@@ -92,9 +99,8 @@ class VoxelDownsample:
             return out_first
 
         # random
-        rng    = np.random.default_rng()
         chosen = np.empty(n_voxels, dtype=np.int64)
-        perm   = rng.permutation(len(pc))
+        perm   = self._rng.permutation(len(pc))
         chosen[inverse[perm]] = perm
         return pc[chosen]
 

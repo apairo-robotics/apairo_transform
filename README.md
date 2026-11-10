@@ -24,7 +24,7 @@ Requires Python ≥ 3.11, numpy and apairo ≥ 0.9. No other hard dependencies.
 
 | Class | Description |
 |---|---|
-| `RangeFilter(min, max)` | Keep points whose distance from the origin is within `[min, max]` metres |
+| `RangeFilter(min, max)` | Keep points whose distance from the origin is within `[min, max)` metres (no bound by default) |
 | `RandomSubsample(n)` | Randomly subsample to at most `n` points |
 | `ShufflePoints()` | Randomly permute the point order |
 | `ChannelSelect(channels)` | Select a subset of columns (e.g. `[0,1,2]` for xyz only) |
@@ -169,6 +169,29 @@ ds = ds.transform("lidar", Compose([
     RandomPointDrop(p=0.05),
 ]))
 ```
+
+### Points with per-point labels
+
+A transform registered on one channel sees that channel only. A step that
+drops or reorders points (`RangeFilter`, `HeightFilter`, `BoxFilter`,
+`RandomSubsample`, `RandomPointDrop`, `ShufflePoints`, `VoxelDownsample`)
+registered on `"lidar"` leaves a per-point `"labels"` channel untouched: the
+cloud loses points and the labels do not, so label `i` no longer describes
+point `i`. Apply one selection to both, in a sample-level step:
+
+```python
+in_range = RangeFilter(max=50.0)
+
+def keep_in_range(sample):
+    keep = in_range.compute_mask(sample.data["lidar"])
+    sample.data["lidar"] = sample.data["lidar"][keep]
+    sample.data["labels"] = sample.data["labels"][keep]
+    return sample
+
+ds = ds.transform(keep_in_range)
+```
+
+`examples/compose.py` does this with a subsample as well.
 
 ### Label remapping
 

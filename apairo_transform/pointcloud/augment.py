@@ -24,6 +24,8 @@ from typing import Literal, Optional, Tuple
 
 import numpy as np
 
+from apairo_transform._random import Rng
+
 
 class RandomRotation:
     """Rotate the point cloud around a fixed axis by a uniformly random angle.
@@ -56,7 +58,7 @@ class RandomRotation:
             raise ValueError(f"max_angle must be > 0, got {max_angle}")
         self._axis = axis
         self._max_angle = max_angle
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.array(pc, copy=True)
@@ -99,7 +101,7 @@ class RandomFlip:
         self._col = 0 if axis == "x" else 1
         self._axis = axis
         self._p = p
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         if self._rng.random() >= self._p:
@@ -135,7 +137,7 @@ class RandomScale:
             raise ValueError(f"range[0] must be < range[1], got {range}")
         self._lo = lo
         self._hi = hi
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.array(pc, copy=True)
@@ -162,7 +164,7 @@ class RandomTranslation:
         if sigma <= 0:
             raise ValueError(f"sigma must be > 0, got {sigma}")
         self._sigma = sigma
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.array(pc, copy=True)
@@ -191,7 +193,7 @@ class GaussianNoise:
         if sigma <= 0:
             raise ValueError(f"sigma must be > 0, got {sigma}")
         self._sigma = sigma
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.array(pc, copy=True)
@@ -219,7 +221,7 @@ class RandomPointDrop:
         if not 0.0 <= p < 1.0:
             raise ValueError(f"p must be in [0, 1), got {p}")
         self._p = p
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc)

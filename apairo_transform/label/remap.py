@@ -12,10 +12,25 @@ from __future__ import annotations
 import numpy as np
 
 
+def _holding(dtype: np.dtype, values) -> np.dtype:
+    """*dtype*, widened if needed to hold every integer in *values*. A value
+    that does not fit used to wrap (300 written as 44 in uint8) or raise,
+    depending on the numpy version."""
+    if dtype.kind not in "iu":
+        return dtype
+    for value in values:
+        dtype = np.promote_types(dtype, np.min_scalar_type(int(value)))
+    return dtype
+
+
 class RemapLabels:
     """Remap integer label values according to a dictionary.
 
     Unknown labels (not present in ``mapping``) are set to ``default``.
+
+    The result keeps the labels' integer type when it holds every target
+    value and ``default``; otherwise it is the next type that does (uint8
+    labels remapped to ids above 255 come out uint16).
 
     Args:
         mapping:       ``{old_id: new_id}`` mapping applied element-wise.
@@ -26,12 +41,21 @@ class RemapLabels:
     def __init__(self, mapping: dict[int, int], default: int = 255) -> None:
         if not mapping:
             raise ValueError("mapping must not be empty")
-        self._mapping = mapping
-        self._default = default
+        # Keys as integers: a recipe written to JSON hands them back as text.
+        self._mapping = {int(k): int(v) for k, v in mapping.items()}
+        self._default = int(default)
+
+    def get_config(self) -> dict:
+        """What rebuilds it (a saved chain stores this, keys as text)."""
+        return {
+            "mapping": {str(k): v for k, v in self._mapping.items()},
+            "default": self._default,
+        }
 
     def __call__(self, labels: np.ndarray) -> np.ndarray:
         labels = np.asarray(labels)
-        out = np.full_like(labels, self._default)
+        dtype = _holding(labels.dtype, [self._default, *self._mapping.values()])
+        out = np.full(labels.shape, self._default, dtype=dtype)
         for src, dst in self._mapping.items():
             out[labels == src] = dst
         return out
@@ -45,6 +69,10 @@ class MaskLabels:
 
     Useful for discarding rare or unknown classes before training.
 
+    The result keeps the labels' integer type when it holds ``ignore_value``;
+    otherwise it is the next type that does (int8 labels with the default 255
+    come out int16).
+
     Args:
         keep:          Set of label IDs to preserve.
         ignore_value:  Value assigned to masked-out labels.  Defaults to ``255``.
@@ -57,7 +85,8 @@ class MaskLabels:
         self._ignore = ignore_value
 
     def __call__(self, labels: np.ndarray) -> np.ndarray:
-        labels = np.asarray(labels).copy()
+        labels = np.asarray(labels)
+        labels = labels.astype(_holding(labels.dtype, [self._ignore]), copy=True)
         mask = ~np.isin(labels, list(self._keep))
         labels[mask] = self._ignore
         return labels

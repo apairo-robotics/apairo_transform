@@ -33,6 +33,10 @@ class CastTo:
     def __init__(self, dtype: np.dtype) -> None:
         self._dtype = np.dtype(dtype)
 
+    def get_config(self) -> dict:
+        """What rebuilds it (a saved chain stores the dtype by name)."""
+        return {"dtype": self._dtype.str}
+
     def __call__(self, x: np.ndarray) -> np.ndarray:
         return np.asarray(x, dtype=self._dtype)
 
