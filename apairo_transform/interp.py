@@ -88,8 +88,14 @@ class Se3Interp(Interpolator):
 
 def _slerp(q0: np.ndarray, q1: np.ndarray, a: float) -> np.ndarray:
     """Shortest-path spherical interpolation between two unit quaternions."""
-    q0 = q0 / np.linalg.norm(q0)
-    q1 = q1 / np.linalg.norm(q1)
+    n0, n1 = float(np.linalg.norm(q0)), float(np.linalg.norm(q1))
+    if not (n0 > 0 and n1 > 0):
+        raise ValueError(
+            f"Cannot interpolate a quaternion of norm {min(n0, n1)}: not a "
+            f"rotation (an uninitialised pose?)."
+        )
+    q0 = q0 / n0
+    q1 = q1 / n1
 
     dot = float(np.dot(q0, q1))
     if dot < 0.0:  # q and -q encode the same rotation: take the short way

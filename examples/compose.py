@@ -2,8 +2,17 @@
 
 Shows how to build a training-ready sample in one pass:
 
-  1. ``lidar``  : RangeFilter → RandomSubsample → ChannelSelect (xyz only)
-  2. ``labels`` : RemapLabels (collapse to coarse classes) → MaskLabels (ignore void)
+  1. points and their labels together: range filter, then subsample -- one
+     selection applied to both, so label ``i`` still describes point ``i``;
+  2. ``lidar``  : ChannelSelect (xyz only)
+  3. ``labels`` : RemapLabels (collapse to coarse classes) → MaskLabels (ignore void)
+
+A transform registered on one channel sees that channel only. A step that
+drops or reorders points (RangeFilter, RandomSubsample, RandomPointDrop,
+ShufflePoints, VoxelDownsample) therefore cannot be registered on ``lidar``
+alone when the sample also carries per-point labels: the cloud would lose
+points and the labels would not. Such a step is written at sample level, as
+``select_points`` below does.
 
 :class:`~apairo.core.Compose` from apairo core chains the per-channel steps.
 All transforms are applied lazily — no data is written to disk.
@@ -25,7 +34,8 @@ from apairo.core import Compose
 from apairo.dataset.rellis.dataset import Rellis3DDataset
 from apairo.dataset.semantic_kitti.dataset import SemanticKittiDataset
 
-from apairo_transform.pointcloud import ChannelSelect, RangeFilter, RandomSubsample
+from apairo_transform._random import Rng
+from apairo_transform.pointcloud import ChannelSelect, RangeFilter
 from apairo_transform.label import MaskLabels, RemapLabels
 
 DATASETS = {
@@ -50,11 +60,29 @@ SEMANTIC_KITTI_COARSE = {
 }
 
 
-def build_pipeline(dataset: str, max_range: float, n_points: int):
-    """Return (lidar_transform, labels_transform) for the chosen dataset."""
+def select_points(lidar_key: str, labels_key: str, max_range: float, n_points: int,
+                  seed: int | None = None):
+    """A sample-level step: keep the points within *max_range*, at most
+    *n_points* of them, and the labels of exactly those points."""
+    in_range = RangeFilter(max=max_range)
+    rng = Rng(seed)
+
+    def step(sample):
+        points, labels = sample.data[lidar_key], sample.data[labels_key]
+        keep = np.flatnonzero(in_range.compute_mask(points))
+        if len(keep) > n_points:
+            keep = np.sort(rng.choice(keep, n_points, replace=False))
+        sample.data[lidar_key] = points[keep]
+        sample.data[labels_key] = labels[keep]
+        return sample
+
+    return step
+
+
+def build_pipeline(dataset: str):
+    """Return (lidar_transform, labels_transform) for the chosen dataset: the
+    per-channel steps, which keep every point."""
     lidar_tf = Compose([
-        RangeFilter(max=max_range),
-        RandomSubsample(n_points),
         ChannelSelect([0, 1, 2]),   # drop intensity, keep xyz
     ])
 
@@ -83,13 +111,14 @@ def main() -> None:
     dataset_cls = DATASETS[args.dataset]
     ds = dataset_cls(args.seq_dir, keys=[args.lidar_key, args.labels_key])
 
-    lidar_tf, labels_tf = build_pipeline(args.dataset, args.max_range, args.n_points)
-
-    ds = (
-        ds
-        .transform(args.lidar_key, lidar_tf)
-        .transform(args.labels_key, labels_tf)
+    lidar_tf, labels_tf = build_pipeline(args.dataset)
+    points_step = select_points(
+        args.lidar_key, args.labels_key, args.max_range, args.n_points
     )
+
+    ds = ds.transform(points_step, in_place=False)   # points and labels together
+    ds = ds.transform(args.lidar_key, lidar_tf, in_place=False)
+    ds = ds.transform(args.labels_key, labels_tf, in_place=False)
 
     print(f"Dataset   : {dataset_cls.__name__}")
     print(f"Sequence  : {args.seq_dir}")

@@ -8,10 +8,11 @@ Typical usage::
 
 from __future__ import annotations
 
-import functools
 from typing import Callable, Optional
 
 import numpy as np
+
+from apairo_transform._random import Rng
 
 def _l2_norm(pc: np.ndarray) -> np.ndarray:
     """Default norm: L2 / Euclidean distance on the XYZ columns.
@@ -22,7 +23,8 @@ def _l2_norm(pc: np.ndarray) -> np.ndarray:
 
 
 class RangeFilter:
-    """Keep only points whose distance from the origin is within [min, max].
+    """Keep only points whose distance from the origin is within ``[min, max)``:
+    a point exactly at ``max`` is dropped.
 
     The distance metric is controlled by ``norm``, a callable
     ``(ndarray of shape (N, 3)) -> (N,)`` that returns one distance per point.
@@ -35,15 +37,17 @@ class RangeFilter:
         RangeFilter(max=50.0, norm=lambda pc: np.sum(np.abs(pc), axis=1))   # L1
 
     Args:
-        min:  Minimum range (metres).  ``None`` disables the lower bound.
-        max:  Maximum range (metres).  ``None`` disables the upper bound.
+        min:  Minimum range (metres), inclusive.  ``None`` (default) disables
+              the lower bound.
+        max:  Maximum range (metres), exclusive.  ``None`` (default) disables
+              the upper bound.
         norm: Callable ``(N, 3) -> (N,)`` computing per-point distances.
     """
 
     def __init__(
         self,
         min: Optional[float] = None,
-        max: Optional[float] = 50.0,
+        max: Optional[float] = None,
         norm: Callable[[np.ndarray], np.ndarray] = _l2_norm,
     ) -> None:
         if min is not None and min < 0:
@@ -96,7 +100,7 @@ class RandomSubsample:
         if n <= 0:
             raise ValueError(f"n must be > 0, got {n}")
         self._n = n
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc)
@@ -123,7 +127,7 @@ class ShufflePoints:
     inference = False
 
     def __init__(self, seed: Optional[int] = None) -> None:
-        self._rng = np.random.default_rng(seed)
+        self._rng = Rng(seed)
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc)
@@ -135,7 +139,8 @@ class ShufflePoints:
 
 
 class HeightFilter:
-    """Keep only points whose Z coordinate is within [min, max].
+    """Keep only points whose Z coordinate is within ``[min, max)``: a point
+    exactly at ``max`` is dropped.
 
     Useful as a coarse ground-removal or sky-clipping step before registration
     or visualisation.
@@ -220,11 +225,11 @@ class TransformPoints:
     """
 
     def __init__(self, T: np.ndarray) -> None:
-        T = np.asarray(T, dtype=np.float64)
+        T = np.array(T, dtype=np.float64)  # a copy: later edits by the caller do not reach it
         if T.shape != (4, 4):
             raise ValueError(f"T must be (4, 4), got {T.shape}")
-        self._R = T[:3, :3]
-        self._t = T[:3, 3]
+        self._R = T[:3, :3].copy()
+        self._t = T[:3, 3].copy()
 
     def __call__(self, pc: np.ndarray) -> np.ndarray:
         pc = np.asarray(pc, dtype=np.float64).copy()

@@ -27,13 +27,18 @@ _IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
 class Resize:
-    """Resize an image to ``(height, width)``.
+    """Resize an image to ``width`` x ``height`` pixels (the result has shape
+    ``(height, width[, C])``), in the dtype it came in: a float image stays
+    float, a 16-bit depth stays 16-bit.
 
     Args:
         width: Target width in pixels.
         height: Target height in pixels.
         method: Interpolation — one of ``"area"`` (default, best for
-            downsampling), ``"linear"``, ``"nearest"``, ``"cubic"``.
+            downsampling), ``"linear"``, ``"nearest"``, ``"cubic"``. Every
+            method but ``"nearest"`` blends neighbouring values: use
+            ``method="nearest"`` for a label or class-id image, where a blend
+            of two ids is a third, unrelated id.
 
     Requires OpenCV (the ``image`` extra).
     """
@@ -61,9 +66,18 @@ class Resize:
             "nearest": cv2.INTER_NEAREST,
             "cubic": cv2.INTER_CUBIC,
         }[self.method]
-        return cv2.resize(
-            img, (self.width, self.height), interpolation=interp
-        ).astype(np.uint8)
+        img = np.asarray(img)
+        try:
+            out = cv2.resize(img, (self.width, self.height), interpolation=interp)
+        except cv2.error as exc:
+            raise TypeError(
+                f"Resize(method={self.method!r}) cannot resize a {img.dtype} image "
+                f"of shape {img.shape}: OpenCV does not interpolate that type "
+                f"(cast it, or use method='nearest' for integer labels)."
+            ) from exc
+        # Same dtype out as in; it used to be cast to uint8, which zeroed a
+        # [0, 1] float image and wrapped a 16-bit depth modulo 256.
+        return out.astype(img.dtype, copy=False)
 
     def __repr__(self) -> str:
         return f"Resize({self.width}x{self.height}, method={self.method!r})"
